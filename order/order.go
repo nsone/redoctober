@@ -13,7 +13,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/cloudflare/redoctober/hipchat"
+	"github.com/cloudflare/redoctober/notifier"
 )
 
 const (
@@ -49,7 +49,7 @@ type OrderIndex struct {
 // fulfilled will be removed from the structure.
 type Orderer struct {
 	Orders        map[string]Order
-	Hipchat       hipchat.HipchatClient
+	Notifier      notifier.Notifier
 	AlternateName string
 }
 
@@ -73,9 +73,9 @@ func GenerateNum() (num string) {
 }
 
 // NewOrder will create a new map of Orders
-func NewOrderer(hipchatClient hipchat.HipchatClient) (o Orderer) {
+func NewOrderer(notifier notifier.Notifier) (o Orderer) {
 	o.Orders = make(map[string]Order)
-	o.Hipchat = hipchatClient
+	o.Notifier = notifier
 	o.AlternateName = "HipchatName"
 	return
 }
@@ -83,7 +83,7 @@ func NewOrderer(hipchatClient hipchat.HipchatClient) (o Orderer) {
 // notify is a generic function for using a notifier, but it checks to make
 // sure that there is a notifier available, since there won't always be.
 func notify(o *Orderer, msg, color string) {
-	o.Hipchat.Notify(msg, color)
+	o.Notifier.Notify(msg, color)
 }
 func (o *Orderer) NotifyNewOrder(duration, orderNum string, names, labels []string, uses int, owners map[string]string) {
 	labelList := ""
@@ -108,7 +108,7 @@ func (o *Orderer) NotifyNewOrder(duration, orderNum string, names, labels []stri
 	}
 
 	n := fmt.Sprintf(NewOrder, nameList, labelList, uses, duration)
-	notify(o, n, hipchat.RedBackground)
+	notify(o, n, notifier.RedBackground)
 	for owner, hipchatName := range owners {
 		queryParams := url.Values{
 			"delegator": {owner},
@@ -118,7 +118,7 @@ func (o *Orderer) NotifyNewOrder(duration, orderNum string, names, labels []stri
 			"ordernum":  {orderNum},
 			"delegatee": {nameList},
 		}.Encode()
-		notify(o, fmt.Sprintf(NewOrderLink, hipchatName, o.Hipchat.RoHost, queryParams), hipchat.GreenBackground)
+		notify(o, fmt.Sprintf(NewOrderLink, hipchatName, o.Notifier.RoHost, queryParams), notifier.GreenBackground)
 	}
 }
 
@@ -132,11 +132,11 @@ func (o *Orderer) NotifyDelegation(delegator, delegatee, orderNum, duration stri
 		}
 	}
 	n := fmt.Sprintf(NewDelegation, delegator, labelList, delegatee, orderNum, duration)
-	notify(o, n, hipchat.YellowBackground)
+	notify(o, n, notifier.YellowBackground)
 }
 func (o *Orderer) NotifyOrderFulfilled(name, orderNum string) {
 	n := fmt.Sprintf(OrderFulfilled, name, orderNum)
-	notify(o, n, hipchat.PurpleBackground)
+	notify(o, n, notifier.PurpleBackground)
 }
 
 func (o *Orderer) FindOrder(user string, labels []string) (string, bool) {

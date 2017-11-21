@@ -1,4 +1,4 @@
-package hipchat
+package notifier
 
 import (
 	"bytes"
@@ -12,15 +12,6 @@ import (
 	"strconv"
 )
 
-const (
-	RedBackground    = "red"
-	YellowBackground = "yellow"
-	GreenBackground  = "green"
-	GrayBackground   = "gray"
-	RandomBackground = "random"
-	PurpleBackground = "purple"
-)
-
 type HipchatClient struct {
 	RoomId int
 	ApiKey string
@@ -28,9 +19,10 @@ type HipchatClient struct {
 	RoHost string
 }
 
-func NewClient() *HipchatClient {
+func NewHipchatClient() *HipchatClient {
 	return &HipchatClient{}
 }
+
 func (h *HipchatClient) Notify(msg, color string) error {
 	if h.ApiKey == "" {
 		return errors.New("ApiKey unset")

@@ -14,8 +14,8 @@ import (
 
 	"github.com/cloudflare/redoctober/config"
 	"github.com/cloudflare/redoctober/cryptor"
-	"github.com/cloudflare/redoctober/hipchat"
 	"github.com/cloudflare/redoctober/keycache"
+	"github.com/cloudflare/redoctober/notifier"
 	"github.com/cloudflare/redoctober/order"
 	"github.com/cloudflare/redoctober/passvault"
 	"github.com/cloudflare/redoctober/persist"
@@ -231,6 +231,27 @@ func validateName(name, password string) error {
 	return nil
 }
 
+func createNotifier(config *config.Config) (notifier.Notifier, error) {
+	if config.HipChat.Valid() {
+		hc := config.HipChat
+		roomId, err := strconv.Atoi(hc.Room)
+		if err != nil {
+			return nil, errors.New("core.init unable to use hipchat roomId provided")
+		}
+
+		hipchatClient := notifier.HipchatClient{
+			ApiKey: hc.APIKey,
+			RoomId: roomId,
+			HcHost: hc.Host,
+			RoHost: config.UI.Root,
+		}
+
+		return &hipchatClient, nil
+	} else {
+		return nil, nil
+	}
+}
+
 // Init reads the records from disk from a given path
 func Init(path string, config *config.Config) error {
 	var err error
@@ -255,41 +276,28 @@ func Init(path string, config *config.Config) error {
 		return err
 	}
 
-	var hipchatClient hipchat.HipchatClient
-	hc := config.HipChat
-	if hc.Valid() {
-		roomId, err := strconv.Atoi(hc.Room)
-		if err != nil {
-			return errors.New("core.init unable to use hipchat roomId provided")
-		}
+	client, err := createNotifier(config)
+	if err != nil {
+		return err
+	}
 
-		hipchatClient = hipchat.HipchatClient{
-			ApiKey: hc.APIKey,
-			RoomId: roomId,
-			HcHost: hc.Host,
-			RoHost: config.UI.Root,
-		}
-
-		name := hc.ID
-		if name == "" {
-			name = "Red October"
-		}
-		message := name + " has restarted."
-		color := hipchat.GreenBackground
+	if client != nil {
+		message := "Red October has restarted."
+		color := notifier.GreenBackground
 
 		status := crypt.Status()
 		if status.State == persist.Inactive {
 			message += " @here: persistence is currently " + status.State + "; the restore admins need to restore the saved delegations."
-			color = hipchat.RedBackground
+			color = notifier.RedBackground
 		}
 
-		err = hipchatClient.Notify(message, color)
+		err = client.Notify(message, color)
 		if err != nil {
 			return err
 		}
 	}
 
-	orders = order.NewOrderer(hipchatClient)
+	orders = order.NewOrderer(client)
 	return nil
 }
 
