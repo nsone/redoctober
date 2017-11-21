@@ -246,6 +246,9 @@ func createNotifier(config *config.Config) (notifier.Notifier, error) {
 		}
 
 		return &hipchatClient, nil
+	} else if config.Slack.Valid() {
+		slackClient := notifier.NewSlackClient(config.Slack.Url)
+		return slackClient, nil
 	} else {
 		return nil, nil
 	}

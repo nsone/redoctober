@@ -90,6 +90,8 @@ func init() {
 		"Hipchat API Key")
 	flag.StringVar(&cli.HipChat.Room, "hcroom", cli.HipChat.Room,
 		"Hipchat Room ID")
+	flag.StringVar(&cli.Slack.Url, "slackurl", cli.Slack.Url,
+		"Slack WebHook URL")
 	flag.StringVar(&cli.Server.KeyPaths, "keys", cli.Server.KeyPaths,
 		"Comma-separated list of PEM-encoded TLS private keys in the same order as certs")
 	flag.StringVar(&cli.Metrics.Host, "metrics-host", cli.Metrics.Host,

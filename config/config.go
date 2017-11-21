@@ -66,6 +66,14 @@ func (hc *HipChat) Valid() bool {
 	return true
 }
 
+type Slack struct {
+	Url string `json:"url"`
+}
+
+func (s *Slack) Valid() bool {
+	return s.Url != ""
+}
+
 // Metrics contains the configuration for the Prometheus metrics
 // collector.
 type Metrics struct {
@@ -104,6 +112,7 @@ type Config struct {
 	Server      *Server      `json:"server"`
 	UI          *UI          `json:"ui"`
 	HipChat     *HipChat     `json:"hipchat"`
+	Slack       *Slack       `json:"slack"`
 	Metrics     *Metrics     `json:"metrics"`
 	Reporting   *Reporting   `json:"reporting"`
 	Delegations *Delegations `json:"delegations"`
@@ -131,6 +140,7 @@ func New() *Config {
 		Server:      &Server{},
 		UI:          &UI{},
 		HipChat:     &HipChat{},
+		Slack:       &Slack{},
 		Metrics:     &Metrics{},
 		Reporting:   &Reporting{},
 		Delegations: &Delegations{},
