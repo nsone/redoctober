@@ -16,7 +16,6 @@ type HipchatClient struct {
 	RoomId int
 	ApiKey string
 	HcHost string
-	RoHost string
 }
 
 func NewHipchatClient() *HipchatClient {

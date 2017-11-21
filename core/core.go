@@ -243,7 +243,6 @@ func createNotifier(config *config.Config) (notifier.Notifier, error) {
 			ApiKey: hc.APIKey,
 			RoomId: roomId,
 			HcHost: hc.Host,
-			RoHost: config.UI.Root,
 		}
 
 		return &hipchatClient, nil
@@ -297,7 +296,7 @@ func Init(path string, config *config.Config) error {
 		}
 	}
 
-	orders = order.NewOrderer(client)
+	orders = order.NewOrderer(config.UI.Root, client)
 	return nil
 }
 

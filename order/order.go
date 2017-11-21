@@ -50,6 +50,7 @@ type OrderIndex struct {
 type Orderer struct {
 	Orders        map[string]Order
 	Notifier      notifier.Notifier
+	RoHost        string
 	AlternateName string
 }
 
@@ -73,9 +74,10 @@ func GenerateNum() (num string) {
 }
 
 // NewOrder will create a new map of Orders
-func NewOrderer(notifier notifier.Notifier) (o Orderer) {
+func NewOrderer(roHost string, notifier notifier.Notifier) (o Orderer) {
 	o.Orders = make(map[string]Order)
 	o.Notifier = notifier
+	o.RoHost = roHost
 	o.AlternateName = "HipchatName"
 	return
 }
@@ -118,7 +120,7 @@ func (o *Orderer) NotifyNewOrder(duration, orderNum string, names, labels []stri
 			"ordernum":  {orderNum},
 			"delegatee": {nameList},
 		}.Encode()
-		notify(o, fmt.Sprintf(NewOrderLink, hipchatName, o.Notifier.RoHost, queryParams), notifier.GreenBackground)
+		notify(o, fmt.Sprintf(NewOrderLink, hipchatName, o.RoHost, queryParams), notifier.GreenBackground)
 	}
 }
 
