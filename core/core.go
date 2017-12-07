@@ -891,12 +891,15 @@ func Order(jsonIn []byte) (out []byte, err error) {
 		numDelegated)
 	orders.Orders[orderNum] = ord
 	out, err = json.Marshal(ord)
+	if err != nil {
+		return jsonStatusError(err)
+	}
 
 	// Get a map to any alternative name we want to notify
 	altOwners := records.GetAltNamesFromName(orders.AlternateName, owners)
 
 	// Let everyone on hipchat know there is a new order.
-	orders.NotifyNewOrder(o.Duration, orderNum, o.Users, o.Labels, o.Uses, altOwners)
+	err = orders.NotifyNewOrder(o.Duration, orderNum, o.Users, o.Labels, o.Uses, altOwners)
 	if err != nil {
 		return jsonStatusError(err)
 	}

@@ -84,10 +84,16 @@ func NewOrderer(roHost string, notifier notifier.Notifier) (o Orderer) {
 
 // notify is a generic function for using a notifier, but it checks to make
 // sure that there is a notifier available, since there won't always be.
-func notify(o *Orderer, msg, color string) {
-	o.Notifier.Notify(msg, color)
+func notify(o *Orderer, msg, color string) (err error) {
+	if o.Notifier != nil {
+		err = o.Notifier.Notify(msg, color)
+	} else {
+		err = errors.New("no Notifier set to notify of order")
+	}
+	return
 }
-func (o *Orderer) NotifyNewOrder(duration, orderNum string, names, labels []string, uses int, owners map[string]string) {
+
+func (o *Orderer) NotifyNewOrder(duration, orderNum string, names, labels []string, uses int, owners map[string]string) error {
 	labelList := ""
 	for i, label := range labels {
 		if i == 0 {
@@ -110,7 +116,11 @@ func (o *Orderer) NotifyNewOrder(duration, orderNum string, names, labels []stri
 	}
 
 	n := fmt.Sprintf(NewOrder, nameList, labelList, uses, duration)
-	notify(o, n, notifier.RedBackground)
+	err := notify(o, n, notifier.RedBackground)
+	if err != nil {
+		return err
+	}
+
 	for owner, hipchatName := range owners {
 		queryParams := url.Values{
 			"delegator": {owner},
@@ -120,11 +130,15 @@ func (o *Orderer) NotifyNewOrder(duration, orderNum string, names, labels []stri
 			"ordernum":  {orderNum},
 			"delegatee": {nameList},
 		}.Encode()
-		notify(o, fmt.Sprintf(NewOrderLink, hipchatName, o.RoHost, queryParams), notifier.GreenBackground)
+		err = notify(o, fmt.Sprintf(NewOrderLink, hipchatName, o.RoHost, queryParams), notifier.GreenBackground)
+		if err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
-func (o *Orderer) NotifyDelegation(delegator, delegatee, orderNum, duration string, labels []string) {
+func (o *Orderer) NotifyDelegation(delegator, delegatee, orderNum, duration string, labels []string) error {
 	labelList := ""
 	for i, label := range labels {
 		if i == 0 {
@@ -134,11 +148,11 @@ func (o *Orderer) NotifyDelegation(delegator, delegatee, orderNum, duration stri
 		}
 	}
 	n := fmt.Sprintf(NewDelegation, delegator, labelList, delegatee, orderNum, duration)
-	notify(o, n, notifier.YellowBackground)
+	return notify(o, n, notifier.YellowBackground)
 }
-func (o *Orderer) NotifyOrderFulfilled(name, orderNum string) {
+func (o *Orderer) NotifyOrderFulfilled(name, orderNum string) error {
 	n := fmt.Sprintf(OrderFulfilled, name, orderNum)
-	notify(o, n, notifier.PurpleBackground)
+	return notify(o, n, notifier.PurpleBackground)
 }
 
 func (o *Orderer) FindOrder(user string, labels []string) (string, bool) {
