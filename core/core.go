@@ -599,6 +599,11 @@ func Encrypt(jsonIn []byte) ([]byte, error) {
 		return jsonStatusError(err)
 	}
 
+	if s.Minimum > len(s.Owners) {
+		err = errors.New("minimum required owner delagations is greater than total owners")
+		return jsonStatusError(err)
+	}
+
 	access := cryptor.AccessStructure{
 		Minimum:    s.Minimum,
 		Names:      s.Owners,
